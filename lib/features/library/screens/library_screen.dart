@@ -83,7 +83,9 @@ class _LibraryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _showDetails(context),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: const Color(AppColors.surface),
@@ -140,6 +142,92 @@ class _LibraryCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      ),
+    );
+  }
+
+  void _showDetails(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(AppColors.surface),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (ctx, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(AppColors.textHint),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Text(item.emoji, style: const TextStyle(fontSize: 40)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(item.title,
+                            style: Theme.of(ctx).textTheme.headlineMedium,
+                            textDirection: TextDirection.rtl),
+                        Text(item.author,
+                            style: Theme.of(ctx).textTheme.bodyLarge?.copyWith(
+                              color: const Color(AppColors.gold))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(item.description,
+                  style: Theme.of(ctx).textTheme.bodyLarge?.copyWith(height: 1.8),
+                  textDirection: TextDirection.rtl),
+              if (item.url != null && item.url!.isNotEmpty) ...[
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(AppColors.primaryLight).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(AppColors.primaryLight).withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        const Icon(Icons.link, size: 16, color: Color(AppColors.primaryLight)),
+                        const SizedBox(width: 6),
+                        Text('رابط المصدر', style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                          color: const Color(AppColors.primaryLight))),
+                      ]),
+                      const SizedBox(height: 6),
+                      SelectableText(item.url!,
+                          style: Theme.of(ctx).textTheme.bodyMedium),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
       ),
     );
   }
