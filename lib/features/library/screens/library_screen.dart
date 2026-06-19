@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../models/models.dart';
 import '../../../services/app_data.dart';
+import '../../hadith/screens/hadith_sections_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -25,6 +27,45 @@ class _LibraryScreenState extends State<LibraryScreen> {
       appBar: AppBar(title: const Text('المكتبة')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: GestureDetector(
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const HadithSectionsScreen())),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(AppColors.primaryDark),
+                      const Color(AppColors.primaryLight).withOpacity(0.3),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(AppColors.gold).withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Text('📗', style: TextStyle(fontSize: 32)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('صحيح مسلم',
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: const Color(AppColors.gold))),
+                          Text('٧٥٦٣ حديثاً — تصفّح وبحث كامل',
+                              style: Theme.of(context).textTheme.bodyMedium),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_left, color: Color(AppColors.gold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
           SizedBox(
             height: 50,
             child: ListView.separated(
@@ -84,7 +125,13 @@ class _LibraryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showDetails(context),
+      onTap: () {
+        if (item.url != null && item.url!.isNotEmpty) {
+          _openUrl(context, item.url!);
+        } else {
+          _showDetails(context);
+        }
+      },
       child: Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
@@ -145,6 +192,17 @@ class _LibraryCard extends StatelessWidget {
       ),
       ),
     );
+  }
+
+  Future<void> _openUrl(BuildContext context, String urlStr) async {
+    final uri = Uri.tryParse(urlStr);
+    if (uri == null) return;
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذّر فتح الرابط: $urlStr')),
+      );
+    }
   }
 
   void _showDetails(BuildContext context) {
