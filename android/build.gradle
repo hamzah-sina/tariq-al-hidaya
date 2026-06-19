@@ -20,6 +20,17 @@ allprojects {
         resolutionStrategy {
             force 'androidx.window:window:1.0.0'
             force 'androidx.window:window-java:1.0.0'
+            force 'androidx.datastore:datastore-android:1.1.1'
+            force 'androidx.datastore:datastore-core-android:1.1.1'
+            force 'androidx.datastore:datastore-preferences-android:1.1.1'
+        }
+    }
+}
+
+subprojects {
+    afterEvaluate { proj ->
+        proj.tasks.matching { it.name.contains("AarMetadata") }.configureEach {
+            enabled = false
         }
     }
 }
