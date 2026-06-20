@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/providers.dart';
+import '../../../models/habit_models.dart';
 import '../../../services/app_data.dart';
 import '../../streak/widgets/streak_circle.dart';
 import '../../emergency/screens/emergency_screen.dart';
+import '../../habits/screens/habits_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -42,6 +44,10 @@ class HomeScreen extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => const SizedBox.shrink(),
             ),
+
+            const SizedBox(height: 20),
+
+            const _TodayHabitsCard(),
 
             const SizedBox(height: 20),
 
@@ -335,6 +341,154 @@ class _InfoSheet extends StatelessWidget {
           )),
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+class _TodayHabitsCard extends ConsumerWidget {
+  const _TodayHabitsCard();
+
+  static const _prayerOrder = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final habitsAsync = ref.watch(todayHabitsProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(AppColors.surface),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(AppColors.primaryLight).withOpacity(0.15)),
+      ),
+      child: habitsAsync.when(
+        data: (habits) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('عادات اليوم',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: const Color(AppColors.primaryLight))),
+                  GestureDetector(
+                    onTap: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const HabitsScreen())),
+                    child: Row(
+                      children: [
+                        Text('${habits.completedCount}/${habits.totalCount}',
+                            style: const TextStyle(color: Color(AppColors.gold))),
+                        const Icon(Icons.chevron_left, size: 18, color: Color(AppColors.gold)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: _prayerOrder.map((key) {
+                  final done = habits.prayers[key] ?? false;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          ref.read(todayHabitsProvider.notifier).togglePrayer(key),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: done
+                                  ? const Color(AppColors.primaryLight)
+                                  : const Color(AppColors.surfaceLight),
+                            ),
+                            child: done
+                                ? const Icon(Icons.check, color: Colors.white, size: 18)
+                                : null,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(prayerNamesArabic[key]!,
+                              style: const TextStyle(fontSize: 10)),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _HabitChip(
+                      emoji: '📖',
+                      label: 'القرآن',
+                      done: habits.quran,
+                      onTap: () => ref.read(todayHabitsProvider.notifier).toggleQuran(),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _HabitChip(
+                      emoji: '📿',
+                      label: 'الذكر',
+                      done: habits.dhikr,
+                      onTap: () => ref.read(todayHabitsProvider.notifier).toggleDhikr(),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _HabitChip extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final bool done;
+  final VoidCallback onTap;
+  const _HabitChip({
+    required this.emoji,
+    required this.label,
+    required this.done,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: done
+              ? const Color(AppColors.primaryLight).withOpacity(0.18)
+              : const Color(AppColors.surfaceLight),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: done
+                  ? const Color(AppColors.primaryLight)
+                  : Colors.transparent),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 13)),
+            if (done) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.check, size: 14, color: Color(AppColors.primaryLight)),
+            ],
+          ],
+        ),
       ),
     );
   }
